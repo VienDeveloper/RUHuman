@@ -14,6 +14,7 @@ async def on_ready():
     bot.db = await aiosqlite.connect("database.db")
     async with bot.db.cursor() as cursor:
         await cursor.execute("CREATE TABLE IF NOT EXISTS servers (server_id INTEGER, role_id INTEGER, channel_id INTEGER)")
+        await cursor.execute("CREATE TABLE IF NOT EXISTS log_channels (server_id INTEGER, channel_id INTEGER)")
         await bot.db.commit()
     print(f"{bot.user} is ready and online!")
 
@@ -25,16 +26,27 @@ async def setup(ctx, role: discord.Role, channel: discord.TextChannel):
     role_id = role.id
     channel_id = channel.id
     data = await bot.db.execute("SELECT * FROM servers WHERE server_id = ?", (guild_id,))
-    if data is not None:
-        async with bot.db.cursor() as cursor:
-            await cursor.execute("UPDATE servers SET role_id = ?, channel_id = ? WHERE server_id = ?", (role_id, channel_id, guild_id))
-            await bot.db.commit()
-        await ctx.respond("You have successfully updated the verification system!")
-    else:
-        async with bot.db.cursor() as cursor:
-            await cursor.execute("INSERT INTO servers VALUES (?, ?, ?)", (guild_id, role_id, channel_id))
-            await bot.db.commit()
-        await ctx.respond("You have successfully set up the verification system!")
+    # if data is not None:
+    #     async with bot.db.cursor() as cursor:
+    #         await cursor.execute("UPDATE servers SET role_id = ?, channel_id = ? WHERE server_id = ?", (role_id, channel_id, guild_id))
+    #         await bot.db.commit()
+    #     await ctx.respond("You have successfully updated the verification system!")
+    # if data is None:
+    async with bot.db.cursor() as cursor:
+        await cursor.execute("INSERT INTO servers VALUES (?, ?, ?)", (guild_id, role_id, channel_id))
+        await bot.db.commit()
+    await ctx.respond("You have successfully set up the verification system!")
+
+@bot.command(name='updateverification', description="Update the verification", guild_ids=[1073787100664696852])
+async def updateverification(ctx, role: discord.Role, channel: discord.TextChannel):
+    await ctx.defer()
+    guild_id = ctx.guild.id
+    role_id = role.id
+    channel_id = channel.id
+    async with bot.db.cursor() as cursor:
+        await cursor.execute("UPDATE servers SET role_id = ?, channel_id = ? WHERE server_id = ?", (role_id, channel_id, guild_id))
+        await bot.db.commit()
+    await ctx.respond("You have successfully updated the verification system!")
 
 @bot.command(name="help", description="Help command", guild_ids=[1073787100664696852])
 async def help(ctx):
@@ -51,13 +63,19 @@ async def verify(ctx):
         await cursor.execute("SELECT * FROM servers WHERE server_id = ?", (guild_id,))
         data = await cursor.fetchone()
         if data is None:
-            await ctx.respond("You have not set up the verification system yet! Please contact the server owner. (do /help for more info))")
+            await ctx.respond("You have not set up the verification system yet! Please contact the server owner. (do /help for more info)")
             return
         role_id = data[1]
         channel_id = data[2]
     if ctx.channel.id != channel_id:
         await ctx.respond("You cannot use this command here!")
         return
+    #checks if the user already has the role
+    role = ctx.guild.get_role(role_id)
+    if role in ctx.author.roles:
+        await ctx.respond("You are already verified!")
+        return
+
     abc = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     #generate a random 5 word code
     code = ""
@@ -66,8 +84,8 @@ async def verify(ctx):
     filename = ""
     for i in range(5):
         filename += random.choice(abc)
-    # await ctx.respond(code) # send the code to the user
-    image = ImageCaptcha(width = 280, height = 90)
+    await ctx.respond(code) # send the code to the user
+    image = ImageCaptcha(width = 280, height = 90, font_sizes=[70], fonts=['./captcha.ttf'])
     captcha_text = image.generate(f'{code}')
     image.write(code, f'{filename}.png')
     # print(img)
@@ -81,6 +99,15 @@ async def verify(ctx):
                     role = ctx.guild.get_role(role_id)
                     await ctx.author.add_roles(role)
                     await interaction.response.send_message("You have been verified!", ephemeral=True)
+                    async with bot.db.cursor() as cursor:
+                        await cursor.execute("SELECT * FROM log_channels WHERE server_id = ?", (guild_id,))
+                        data = await cursor.fetchone()
+                        if data is not None:
+                            channel_id = data[1]
+                            channel = bot.get_channel(channel_id)
+                            await channel.send(f"{ctx.author} has verified themselves!")
+                        else:
+                            pass
                 except discord.Forbidden:
                     await interaction.response.send_message("I do not have permissions to give you the role!", ephemeral=True)
             else:
@@ -94,9 +121,22 @@ async def verify(ctx):
     await ctx.respond('To verify enter the code...',file=discord.File(f'{filename}.png'), view=MyView(timeout=15), ephemeral=True)
     os.remove(f'{filename}.png')
 
-
-
-
-
+@bot.command(name='set_log_channel', description="Set the log channel", guild_ids=[1073787100664696852])
+@bridge.has_permissions(administrator=True)
+async def set_log_channel(ctx, channel: discord.TextChannel):
+    await ctx.defer()
+    guild_id = ctx.guild.id
+    channel_id = channel.id
+    async with bot.db.cursor() as cursor:
+        await cursor.execute("SELECT * FROM log_channels WHERE server_id = ?", (guild_id,))
+        data = await cursor.fetchone()
+        if data is None:
+            await cursor.execute("INSERT INTO log_channels VALUES (?, ?)", (guild_id, channel_id))
+            await bot.db.commit()
+            await ctx.respond("You have successfully set the log channel!")
+        else:
+            await cursor.execute("UPDATE log_channels SET channel_id = ? WHERE server_id = ?", (channel_id, guild_id))
+            await bot.db.commit()
+            await ctx.respond("You have successfully updated the log channel!")
 
 bot.run(os.getenv('TOKEN')) # run the bot with the token
