@@ -18,7 +18,7 @@ async def on_ready():
         await bot.db.commit()
     print(f"{bot.user} is ready and online!")
 
-@bot.command(name="setup", description="Setup the verification system", guild_ids=[1073787100664696852])
+@bot.command(name="setup", description="Setup the verification system")
 @bridge.has_permissions(administrator=True)
 async def setup(ctx, role: discord.Role, channel: discord.TextChannel):
     await ctx.defer()
@@ -37,7 +37,7 @@ async def setup(ctx, role: discord.Role, channel: discord.TextChannel):
         await bot.db.commit()
     await ctx.respond("You have successfully set up the verification system!")
 
-@bot.command(name='updateverification', description="Update the verification", guild_ids=[1073787100664696852])
+@bot.command(name='updateverification', description="Update the verification")
 async def updateverification(ctx, role: discord.Role, channel: discord.TextChannel):
     await ctx.defer()
     guild_id = ctx.guild.id
@@ -48,14 +48,14 @@ async def updateverification(ctx, role: discord.Role, channel: discord.TextChann
         await bot.db.commit()
     await ctx.respond("You have successfully updated the verification system!")
 
-@bot.command(name="help", description="Help command", guild_ids=[1073787100664696852])
+@bot.command(name="help", description="Help command")
 async def help(ctx):
     await ctx.defer()
     embed = discord.Embed(title="Help", description="This is a help command", color=discord.Color.green())
     embed.add_field(name="setup", value="To set up the verification system, you need to do /setup @role #channel")
     embed.add_field(name="verify", value="To verify yourself, you need to do /verify")
     await ctx.respond(embed=embed)
-@bot.command(name="verify", description="Verify yourself", guild_ids=[1073787100664696852])
+@bot.command(name="verify", description="Verify yourself")
 async def verify(ctx):
     await ctx.defer()
     guild_id = ctx.guild.id
@@ -84,7 +84,7 @@ async def verify(ctx):
     filename = ""
     for i in range(5):
         filename += random.choice(abc)
-    await ctx.respond(code) # send the code to the user
+#     await ctx.respond(code) # send the code to the user
     image = ImageCaptcha(width = 280, height = 90, font_sizes=[70], fonts=['./captcha.ttf'])
     captcha_text = image.generate(f'{code}')
     image.write(code, f'{filename}.png')
@@ -121,7 +121,7 @@ async def verify(ctx):
     await ctx.respond('To verify enter the code...',file=discord.File(f'{filename}.png'), view=MyView(timeout=15), ephemeral=True)
     os.remove(f'{filename}.png')
 
-@bot.command(name='set_log_channel', description="Set the log channel", guild_ids=[1073787100664696852])
+@bot.command(name='set_log_channel', description="Set the log channel")
 @bridge.has_permissions(administrator=True)
 async def set_log_channel(ctx, channel: discord.TextChannel):
     await ctx.defer()
