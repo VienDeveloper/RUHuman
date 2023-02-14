@@ -41,9 +41,7 @@ async def setup(ctx, role: discord.Role, channel: discord.TextChannel):
         await bot.db.commit()
     await ctx.respond("You have successfully set up the verification system!")
 
-
-@bot.command(name='updateverification', description="Update the verification")
-@bridge.has_permissions(administrator=True)
+@bot.command(name='updateverification', description="Update the verification", guild_ids=[1073787100664696852])
 async def updateverification(ctx, role: discord.Role, channel: discord.TextChannel):
     await ctx.defer()
     guild_id = ctx.guild.id
@@ -109,6 +107,7 @@ async def verify(ctx):
     filename = ""
     for i in range(5):
         filename += random.choice(abc)
+    await ctx.respond(code) # send the code to the user
     image = ImageCaptcha(width = 280, height = 90, font_sizes=[70], fonts=['./captcha.ttf'])
     captcha_text = image.generate(f'{code}')
     image.write(code, f'{filename}.png')
