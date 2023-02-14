@@ -59,6 +59,12 @@ async def help(ctx):
     embed = discord.Embed(title="Help", description="This is a help command", color=discord.Color.green())
     embed.add_field(name="setup", value="To set up the verification system, you need to do /setup @role #channel")
     embed.add_field(name="verify", value="To verify yourself, you need to do /verify")
+    embed.add_field(name="updateverification", value="To update the verification system, you need to do /updateverification @role #channel")
+    embed.add_field(name="set_log_channel", value="To set the log channel, you need to do /setlogchannel #channel")
+    embed.add_field(name="antialt", value="To enable anti alt, you need to do /antialt")
+    embed.add_field(name="disable-anti-alt", value="To disable anti alt, you need to do /disable-anti-alt")
+    embed.add_field(name='remove-log-channel', value='To remove the log channel, you need to do /removelogchannel')
+    embed.add_field(name='help', value='To get help, you need to do /help')
     await ctx.respond(embed=embed)
 @bot.command(name="verify", description="Verify yourself")
 async def verify(ctx):
