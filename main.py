@@ -22,8 +22,9 @@ async def on_ready():
         await bot.db.commit()
     print(f"{bot.user} is ready and online!")
 
+
 @bot.command(name="setup", description="Setup the verification system")
-@bridge.has_permissions(administrator=True)
+@bridge.has_permissions(administrator=True)  
 async def setup(ctx, role: discord.Role, channel: discord.TextChannel):
     await ctx.defer()
     guild_id = ctx.guild.id
