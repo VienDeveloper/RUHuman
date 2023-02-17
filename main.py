@@ -114,7 +114,7 @@ async def verify(ctx):
     filename = ""
     for i in range(5):
         filename += random.choice(abc)
-    await ctx.respond(code) # send the code to the user
+    #await ctx.respond(code) # send the code to the user
     image = ImageCaptcha(width = 280, height = 90, font_sizes=[70], fonts=['./captcha.ttf'])
     captcha_text = image.generate(f'{code}')
     image.write(code, f'{filename}.png')
